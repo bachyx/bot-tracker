@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     lastPing: now,
   }
 
-  await kv.hset(HEARTBEAT_FILE, botId, JSON.stringify(entry))
+  await kv.hset(HEARTBEAT_FILE, { [botId]: JSON.stringify(entry) })
 
   res.json({ ok: true, timestamp: now })
 }
