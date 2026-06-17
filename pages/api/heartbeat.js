@@ -1,7 +1,7 @@
 import { kv } from '@vercel/kv'
 
-const TIMEOUT_MS = 5 * 60 * 1000 // 5 menit dianggap mati
-const HEARTBEAT_FILE = 'bots:heartbeat'
+const TIMEOUT_MS = 5 * 60 * 1000
+const KEY = 'bots:list'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -23,7 +23,14 @@ export default async function handler(req, res) {
     lastPing: now,
   }
 
-  await kv.hset(HEARTBEAT_FILE, { [botId]: JSON.stringify(entry) })
+  const current = await kv.get(KEY) || []
+  const idx = current.findIndex(b => b.botId === botId)
+  if (idx >= 0) {
+    current[idx] = entry
+  } else {
+    current.push(entry)
+  }
+  await kv.set(KEY, current.slice(-50))
 
   res.json({ ok: true, timestamp: now })
 }
